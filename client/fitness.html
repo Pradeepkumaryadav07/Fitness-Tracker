@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker Community</title>
+    <link rel="stylesheet" href="styles.css">
+    <script defer src="chatbot.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #121212;
+            color: #fff;
+        }
+        header {
+            background: linear-gradient(135deg, #1f1f1f, #292929);
+            padding: 15px;
+            text-align: center;
+        }
+        h1 {
+            color: #ff4081;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+        }
+        nav ul li {
+            margin: 0 15px;
+        }
+        nav ul li a {
+            text-decoration: none;
+            color: #ff4081;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        nav ul li a:hover {
+            color: #ff79a8;
+        }
+        .forum {
+            text-align: center;
+            padding: 50px;
+        }
+        .post-form textarea {
+            width: 80%;
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid #ff4081;
+            color: #fff;
+        }
+        .post-form button {
+            background: #ff4081;
+            border: none;
+            padding: 10px 20px;
+            color: #fff;
+            cursor: pointer;
+        }
+        .posts .post {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+        }
+        #chatbot {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        #chatbot-toggle {
+            background: #ff4081;
+            border: none;
+            padding: 15px 20px;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 50px;
+            font-weight: bold;
+        }
+        #chatbox {
+            display: none;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+            width: 300px;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+        }
+        #chat-messages {
+            height: 200px;
+            overflow-y: auto;
+        }
+        #chat-input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background: #292929;
+            border: none;
+            color: #fff;
+        }
+        #send-chat {
+            background: #ff4081;
+            border: none;
+            padding: 10px;
+            color: #fff;
+            cursor: pointer;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #1f1f1f;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Fitness Tracker Community</h1>
+        <p>"Connect, Share, and Grow Stronger Together!"</p>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="fitness.html" class="active">Community</a></li>
+                
+                <li><a href="aboute_us.html">About</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="forum">
+            <h2>Share Your Fitness Journey</h2>
+            <div class="post-form">
+                <textarea id="postContent" placeholder="Share your workout, diet tips, or progress..."></textarea>
+                <button onclick="addPost()">Post</button>
+            </div>
+            <div class="posts" id="postList">
+                <div class="post">
+                    <h3>Alex</h3>
+                    <p>Just completed a 5K run! Feeling great! 💪🏃‍♂️</p>
+                </div>
+                <div class="post">
+                    <h3>Priya</h3>
+                    <p>Looking for healthy meal prep ideas. Any suggestions? 🍎🥗</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <div id="chatbot">
+        <button id="chatbot-toggle">Chat with AI Trainer</button>
+        <div id="chatbox">
+            <div id="chat-messages">
+                <p><strong>AI Trainer:</strong> Hi! How can I help you today?</p>
+                <p><strong>Suggested Questions:</strong></p>
+                <ul>
+                    <li>🏋️‍♂️ What’s the best workout for weight loss?</li>
+                    <li>🍏 How can I improve my diet?</li>
+                    <li>💧 How much water should I drink daily?</li>
+                    <li>😴 Tips for better sleep?</li>
+                </ul>
+            </div>
+            <div id="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Type your message...">
+                <button id="send-chat">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 Fitness Tracker. All rights reserved.</p>
+    </footer>
+    <script>
+        // Initialize posts and chat messages from local storage
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPosts();
+            loadChat();
+        });
+
+        // Function to save posts to local storage
+        function savePosts(posts) {
+            localStorage.setItem('fitnessPosts', JSON.stringify(posts));
+        }
+
+        // Default posts that will show if no posts exist
+        const defaultPosts = [
+            {
+                username: 'Alex',
+                content: 'Just completed a 5K run! Feeling great! 💪🏃‍♂️',
+                timestamp: new Date().toISOString()
+            },
+            {
+                username: 'Priya',
+                content: 'Looking for healthy meal prep ideas. Any suggestions? 🍎🥗',
+                timestamp: new Date().toISOString()
+            }
+        ];
+
+        // Function to load posts from local storage
+        function loadPosts() {
+            let posts = JSON.parse(localStorage.getItem('fitnessPosts'));
+            
+            // If no posts in local storage, use default posts
+            if (!posts || posts.length === 0) {
+                posts = defaultPosts;
+                savePosts(posts); // Save default posts to local storage
+            }
+            
+            const postList = document.getElementById("postList");
+            postList.innerHTML = ''; // Clear existing posts
+            
+            // Display all posts
+            posts.forEach(post => {
+                const newPost = document.createElement("div");
+                newPost.classList.add("post");
+                const timeString = new Date(post.timestamp).toLocaleString();
+                newPost.innerHTML = `
+                    <h3>${post.username || 'User'}</h3>
+                    <p>${post.content}</p>
+                    <small>${timeString}</small>
+                `;
+                postList.appendChild(newPost);
+            });
+        }
+
+        // Function to add a new post to the community
+        function addPost() {
+            const postContent = document.getElementById("postContent").value;
+            if (postContent.trim() !== "") {
+                const postList = document.getElementById("postList");
+                const newPost = document.createElement("div");
+                newPost.classList.add("post");
+                
+                // Create post data
+                const postData = {
+                    username: 'You',
+                    content: postContent,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Save to local storage
+                const posts = JSON.parse(localStorage.getItem('fitnessPosts')) || [];
+                posts.unshift(postData); // Add new post to beginning of array
+                savePosts(posts);
+                
+                // Update UI
+                loadPosts();
+                document.getElementById("postContent").value = "";
+            }
+        }
+
+        // Toggle chat visibility
+        document.getElementById("chatbot-toggle").addEventListener("click", function() {
+            const chatbox = document.getElementById("chatbox");
+            chatbox.style.display = chatbox.style.display === "none" ? "block" : "none";
+        });
+
+        // Function to save chat messages to local storage
+        function saveChat(messages) {
+            localStorage.setItem('fitnessChat', JSON.stringify(messages));
+        }
+
+        // Function to load chat messages from local storage
+        function loadChat() {
+            const chatMessages = document.getElementById("chat-messages");
+            const savedChat = JSON.parse(localStorage.getItem('fitnessChat')) || [
+                { sender: 'AI Trainer', message: 'Hi! How can I help you today?', timestamp: new Date().toISOString() },
+                { sender: 'AI Trainer', message: 'Suggested Questions:', timestamp: new Date().toISOString() },
+                { sender: 'AI Trainer', message: '🏋️‍♂️ What\'s the best workout for weight loss?', timestamp: new Date().toISOString() },
+                { sender: 'AI Trainer', message: '🍏 How can I improve my diet?', timestamp: new Date().toISOString() },
+                { sender: 'AI Trainer', message: '💧 How much water should I drink daily?', timestamp: new Date().toISOString() },
+                { sender: 'AI Trainer', message: '😴 Tips for better sleep?', timestamp: new Date().toISOString() }
+            ];
+            
+            chatMessages.innerHTML = ''; // Clear existing messages
+            
+            savedChat.forEach(msg => {
+                const isUser = msg.sender === 'You';
+                const messageDiv = document.createElement("div");
+                messageDiv.className = isUser ? 'user-message' : 'bot-message';
+                const timeString = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                messageDiv.innerHTML = `<strong>${msg.sender}:</strong> ${msg.message} <small class="message-time">${timeString}</small>`;
+                chatMessages.appendChild(messageDiv);
+            });
+            
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // If no existing chat, save the default one
+            if (!localStorage.getItem('fitnessChat')) {
+                saveChat(savedChat);
+            }
+        }
+
+        // AI Trainer Responses
+        const aiResponses = {
+            'workout': 'For weight loss, I recommend a combination of cardio and strength training. Try 30 minutes of cardio (like running or cycling) followed by bodyweight exercises (push-ups, squats, lunges) 4-5 times a week.',
+            'diet': 'A balanced diet is key! Focus on lean proteins, whole grains, and plenty of vegetables. Try to limit processed foods and added sugars. Would you like specific meal suggestions?',
+            'water': 'The general recommendation is to drink at least 8 glasses (2 liters) of water daily. If you exercise frequently, you might need more. A good rule is to drink enough so your urine is light yellow.',
+            'sleep': 'For better sleep, try to maintain a consistent sleep schedule, avoid screens before bed, and keep your bedroom cool and dark. Aim for 7-9 hours of quality sleep each night.',
+            'default': 'I\'m here to help with your fitness and health questions! You can ask about workouts, nutrition, sleep, or any other health-related topics.'
+        };
+
+        // Function to add a message to the chat
+        function addMessage(message, isUser = false) {
+            const chatMessages = document.getElementById("chat-messages");
+            const messageDiv = document.createElement("div");
+            const sender = isUser ? 'You' : 'AI Trainer';
+            const timestamp = new Date().toISOString();
+            const timeString = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.className = isUser ? 'user-message' : 'bot-message';
+            messageDiv.innerHTML = `<strong>${sender}:</strong> ${message} <small class="message-time">${timeString}</small>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Save to local storage
+            const chatHistory = JSON.parse(localStorage.getItem('fitnessChat')) || [];
+            chatHistory.push({ sender, message, timestamp });
+            saveChat(chatHistory);
+        }
+
+        // Function to get AI response
+        function getAIResponse(message) {
+            const lowerMsg = message.toLowerCase();
+            
+            if (lowerMsg.includes('workout') || lowerMsg.includes('exercise')) {
+                return aiResponses.workout;
+            } else if (lowerMsg.includes('diet') || lowerMsg.includes('nutrition') || lowerMsg.includes('meal') || lowerMsg.includes('eat')) {
+                return aiResponses.diet;
+            } else if (lowerMsg.includes('water') || lowerMsg.includes('hydrate')) {
+                return aiResponses.water;
+            } else if (lowerMsg.includes('sleep') || lowerMsg.includes('rest')) {
+                return aiResponses.sleep;
+            } else {
+                return aiResponses.default;
+            }
+        }
+
+        // Handle chat input
+        document.getElementById("chat-input").addEventListener("keypress", function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        document.getElementById("send-chat").addEventListener("click", sendMessage);
+
+        function sendMessage() {
+            const input = document.getElementById("chat-input");
+            const message = input.value.trim();
+            
+            if (message !== '') {
+                // Add user message
+                addMessage(message, true);
+                
+                // Get and add AI response after a short delay
+                setTimeout(() => {
+                    const response = getAIResponse(message);
+                    addMessage(response);
+                }, 500);
+                
+                // Clear input
+                input.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
